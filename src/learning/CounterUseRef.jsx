@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 
-function CounterUseRef() {
+export function CounterUseRef() {
   const [count, setCount] = useState(0)
   const countRef = useRef(0)
 
@@ -23,5 +23,3 @@ function CounterUseRef() {
     </div>
   )
 }
-
-export default CounterUseRef

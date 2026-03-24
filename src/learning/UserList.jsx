@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 
-function UserList() {
+export function UserList() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -66,5 +66,3 @@ function UserList() {
     </div>
   )
 }
-
-export default UserList

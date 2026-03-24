@@ -1,6 +1,6 @@
 import { useRef } from "react"
 
-function InputFocus() {
+export function InputFocus() {
   const inputRef = useRef(null)
 
   const handleClick = () => {
@@ -20,5 +20,3 @@ function InputFocus() {
     </div>
   )
 }
-
-export default InputFocus

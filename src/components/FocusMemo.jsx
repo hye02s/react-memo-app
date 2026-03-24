@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react"
+import { Link } from "react-router-dom"
+import { useMemos } from "../hooks/useMemos"
 
-function FocusMemo() {
-  const [memos, setMemos] = useState(() => {
-    const saved = localStorage.getItem("my-memos")
-    return saved ? JSON.parse(saved) : []
-  })
+export function FocusMemo() {
+  const { memos, addMemo, deleteMemo, clearMemos, editMemo } = useMemos()
+
   const [inputValue, setInputValue] = useState("")
-  const [editingIndex, setEditingIndex] = useState("")
+  const [editingId, setEditingId] = useState(null)
   const [editValue, setEditValue] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -17,44 +17,33 @@ function FocusMemo() {
     inputRef.current.focus()
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem("my-memos", JSON.stringify(memos))
-  }, [memos])
-
   const handleAddMemo = () => {
     if (inputValue.trim() === "") return
-    const now = new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-    setMemos([...memos, { text: inputValue, time: now }])
+    addMemo(inputValue)
     setInputValue("")
     inputRef.current.focus()
     totalCountRef.current = totalCountRef.current + 1
     console.log("Cumulative creations: ", totalCountRef.current)
   }
 
-  const handleDelete = (indexToDelete) => {
-    const newMemos = memos.filter((_, index) => index !== indexToDelete)
-    setMemos(newMemos)
+  const handleDelete = (idToDelete) => {
+    deleteMemo(idToDelete)
   }
 
   const handleClearAll = () => {
     if (window.confirm("Are you sure you want to delete all memos?")) {
-      setMemos([])
+      clearMemos()
     }
   }
 
-  const startEdit = (index) => {
-    setEditingIndex(index)
-    setEditValue(memos[index].text)
+  const startEdit = (memo) => {
+    setEditingId(memo.id)
+    setEditValue(memo.text)
   }
 
-  const saveEdit = (index) => {
-    const updateMemos = [...memos]
-    updateMemos[index].text = editValue
-    setMemos(updateMemos)
-    setEditingIndex(null)
+  const saveEdit = (id) => {
+    editMemo(id, editValue)
+    setEditingId(null)
   }
 
   const filteredMemos = memos.filter((memo) =>
@@ -72,13 +61,13 @@ function FocusMemo() {
         backgroundColor: "#f9f9f9",
       }}
     >
-      <h2 style={{ textAlign: "center" }}>📝 Editable Notepad</h2>
+      <h2 style={{ textAlign: "center" }}>📝 Smart Memo Pad (Refactored)</h2>
 
       {/* Search Input */}
       <input
         type="text"
-        style={{ width: "100%", padding: "8px", marginBottom: "15px" }}
-        placeholder="🔍 Search..."
+        style={{ width: "96%", padding: "8px", marginBottom: "15px" }}
+        placeholder="🔍 Search memos..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
@@ -91,7 +80,7 @@ function FocusMemo() {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Enter a new memo"
+          placeholder="Type a new memo"
           onKeyDown={(e) => e.key === "Enter" && handleAddMemo()}
         />
         <button onClick={handleAddMemo}>Add</button>
@@ -123,26 +112,29 @@ function FocusMemo() {
       )}
 
       <ul style={{ paddingLeft: "0px" }}>
-        {filteredMemos.map((memo, index) => (
+        {filteredMemos.map((memo) => (
           <li
-            key={index}
+            key={memo.id}
             style={{
-              marginBottom: "10px",
               listStyle: "none",
-              padding: "10px",
-              backgroundColor: "white",
+              padding: "12px",
+              marginBottom: "10px",
+              backgroundColor: "#fff",
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               borderRadius: "5px",
             }}
           >
-            {editingIndex === index ? (
+            {editingId === memo.id ? (
               <div style={{ display: "flex", gap: "5px" }}>
                 <input
                   style={{ flex: 1 }}
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && saveEdit(memo.id)}
+                  autoFocus
                 />
-                <button onClick={() => saveEdit(index)}>Save</button>
-                <button onClick={() => setEditingIndex(null)}>Cancel</button>
+                <button onClick={() => saveEdit(memo.id)}>Save</button>
+                <button onClick={() => setEditingId(null)}>Cancel</button>
               </div>
             ) : (
               <div
@@ -152,21 +144,26 @@ function FocusMemo() {
                   alignItems: "center",
                 }}
               >
-                <div>
-                  <div>{memo.text}</div>
-                  <div style={{ fontSize: "11px", color: "#888" }}>
-                    {memo.time}
-                  </div>
+                <div style={{ flex: 1 }}>
+                  <Link
+                    to={`/focusmemo/${memo.id}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <div style={{ fontWeight: "bold" }}>{memo.text}</div>
+                    <div style={{ fontSize: "11px", color: "#999" }}>
+                      {memo.time}
+                    </div>
+                  </Link>
                 </div>
                 <div>
                   <button
-                    onClick={() => startEdit(index)}
+                    onClick={() => startEdit(memo)}
                     style={{ marginRight: "5px" }}
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(index)}
+                    onClick={() => handleDelete(memo.id)}
                     style={{ color: "red" }}
                   >
                     Delete
@@ -185,5 +182,3 @@ function FocusMemo() {
     </div>
   )
 }
-
-export default FocusMemo
